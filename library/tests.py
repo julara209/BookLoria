@@ -1,6 +1,13 @@
+
 from django.test import SimpleTestCase
 
-from library.services import NO_AUTHOR, _clean_author, _normalize_genre, load_books
+from library.services import (
+    NO_AUTHOR,
+    _clean_author,
+    _normalize_genre,
+    _categorize_genre,
+    load_books,
+)
 
 
 class LoadBooksTests(SimpleTestCase):
@@ -28,13 +35,17 @@ class NormalizeGenreTests(SimpleTestCase):
 
     def test_all_novela_variants_are_unified(self):
         variants = [
-            "NOEVELA DE ADULTOS", "NOVEL DE ADULTOS", "NOVELA DE AADULTOS",
-            "NOVELA DE ADULTO", "NOVELA DE ADUÑTOS", "NOVELAS DE ADULTOS",
+            "NOEVELA DE ADULTOS", "NOVEL DE ADULTOS",
+            "NOVELA DE AADULTOS", "NOVELA DE ADULTO",
+            "NOVELA DE ADUNTOS", "NOVELAS DE ADULTOS",
             "NOVLA DE ADULTOS",
         ]
         for variant in variants:
             with self.subTest(variant=variant):
-                self.assertEqual(_normalize_genre(variant), "NOVELA DE ADULTOS")
+                self.assertEqual(
+                    _normalize_genre(variant),
+                    "NOVELA DE ADULTOS"
+                )
 
     def test_empty_genre_becomes_unclassified(self):
         self.assertEqual(_normalize_genre("-"), "SIN CLASIFICAR")
@@ -44,3 +55,35 @@ class NormalizeGenreTests(SimpleTestCase):
     def test_infantil_is_preserved(self):
         infantil = [b for b in load_books() if "INFANTIL" in b["genre"]]
         self.assertEqual(len(infantil), 271)
+
+
+class GenreCategoriesTests(SimpleTestCase):
+
+    def test_literature_genres_receive_correct_category(self):
+        self.assertEqual(
+            _categorize_genre("NOVELA DE ADULTOS"),
+            "Literatura"
+        )
+
+    def test_infantil_genres_receive_correct_category(self):
+        self.assertEqual(
+            _categorize_genre("NOVELA INFANTIL"),
+            "Infantil y juvenil"
+        )
+
+    def test_art_genres_receive_correct_category(self):
+        self.assertEqual(
+            _categorize_genre("TEATRO"),
+            "Arte y cultura"
+        )
+
+    def test_unknown_genre_is_unclassified(self):
+        self.assertEqual(
+            _categorize_genre("GENERO DESCONOCIDO"),
+            "Sin clasificar"
+        )
+
+    def test_every_book_has_exactly_one_category(self):
+        for book in load_books():
+            self.assertIn("category", book)
+            self.assertTrue(book["category"])
