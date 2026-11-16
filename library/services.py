@@ -6,6 +6,26 @@ from django.conf import settings
 DATA_FILE = Path(settings.BASE_DIR) / "data" / "biblioteca_montenegro.csv"
 NO_AUTHOR = "Autor no registrado"
 
+GENRE_ALIASES = {
+    "-": "SIN CLASIFICAR",
+    "CUENTOS": "CUENTO",
+    "NOEVELA DE ADULTOS": "NOVELA DE ADULTOS",
+    "NOVEL DE ADULTOS": "NOVELA DE ADULTOS",
+    "NOVELA DE AADULTOS": "NOVELA DE ADULTOS",
+    "NOVELA DE ADULTO": "NOVELA DE ADULTOS",
+    "NOVELA DE ADUÑTOS": "NOVELA DE ADULTOS",
+    "NOVELAS DE ADULTOS": "NOVELA DE ADULTOS",
+    "NOVLA DE ADULTOS": "NOVELA DE ADULTOS",
+}
+
+
+def _normalize_genre(value):
+    value = " ".join((value or "").upper().split())
+
+    if not value or value == "-":
+        return "SIN CLASIFICAR"
+
+    return GENRE_ALIASES.get(value, value)
 
 class DataFileError(Exception):
     """Raised when the library data file cannot be read."""
@@ -34,7 +54,7 @@ def load_books(path=DATA_FILE):
                 {
                     "title": (row.get("NOMBRE DEL LIBRO") or "").strip(),
                     "author": _clean_author(row.get("AUTOR")),
-                    "genre": (row.get("GENERO") or "").strip(),
+                    "genre": _normalize_genre(row.get("GENERO")),
                     "copies": _to_int(row.get("NUMERO")),
                 }
                 for row in reader
