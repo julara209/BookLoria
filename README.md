@@ -38,6 +38,30 @@ Campos usados: `NOMBRE DEL LIBRO`, `AUTOR`, `GENERO`, `NUMERO` (ejemplares).
 - No hay edad recomendada. "Infantil" se toma solo de los registros cuyo género lo dice explícitamente.
 - Hay registros sin autor o sin género (`-`) y títulos repetidos, que pueden ser otras copias o ediciones.
 
+## Categorías de lectura
+
+BookLoria agrupa los géneros normalizados del inventario en categorías de lectura para facilitar la búsqueda y exploración de los libros.
+
+La clasificación se realiza mediante una tabla de correspondencia definida en `library/services.py`, que relaciona cada género con una única categoría.
+
+| Categoría | Criterio de agrupación |
+|---|---|
+| Literatura | Novelas, cuentos, poesía, antologías, ensayos, mitos y leyendas para adultos y literatura universal. |
+| Infantil y juvenil | Libros y materiales identificados explícitamente como infantiles o juveniles. |
+| Arte y cultura | Teatro, dramaturgia, arte, recreación, deporte y manualidades. |
+| Ciencias y tecnología | Tecnología, informática, ciencias naturales, matemáticas y medicina. |
+| Ciencias sociales e historia | Geografía, historia y ciencias sociales. |
+| Educación y consulta | Cartillas, magisterio y materiales educativos o de consulta. |
+| Idiomas | Materiales relacionados con el aprendizaje de idiomas, como inglés. |
+| Sin clasificar | Géneros vacíos, desconocidos o que no tienen una correspondencia definida. |
+
+### Criterios de clasificación
+
+- Cada libro recibe exactamente una categoría.
+- Se utiliza el género previamente normalizado para realizar la clasificación.
+- Los géneros que no aparecen en la tabla de correspondencias se asignan a "Sin clasificar".
+- Las categorías son una agrupación definida por el equipo y no una clasificación oficial de la biblioteca.
+
 ## Requisitos
 
 - Python 3.x (usar la versión indicada en `requirements.txt` o por el instructor)
