@@ -1,10 +1,11 @@
 import csv
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 from django.conf import settings
 
-DATA_FILE = Path(settings.BASE_DIR) / "data" / "biblioteca_montenegro.csv"
+DATA_FILE = Path(settings.BASE_DIR) / "data" / "Biblioteca_Montenegro.csv"
 NO_AUTHOR = "Autor no registrado"
 
 GENRE_ALIASES = {
@@ -68,5 +69,27 @@ def load_books(path=DATA_FILE):
     except FileNotFoundError:
         raise DataFileError(
             "No se encontró el archivo de datos. "
-            "Verifique que exista data/biblioteca_montenegro.csv"
+            "Verifique que exista data/Biblioteca_Montenegro.csv"
         )
+
+
+def get_categories(books):
+    """Return [{'name': ..., 'count': ...}] sorted by name."""
+    counts = Counter(book["genre"] for book in books)
+    return [{"name": name, "count": count} for name, count in sorted(counts.items())]
+
+
+def search_books(books, genre="", query=""):
+    """Filter books by category and/or by title or author (ignores accents and case)."""
+    result = books
+    if genre.strip():
+        genre = _normalize_genre(genre)
+        result = [b for b in result if b["genre"] == genre]
+    query = _strip_accents(query.strip().lower())
+    if query:
+        result = [
+            b for b in result
+            if query in _strip_accents(b["title"].lower())
+            or query in _strip_accents(b["author"].lower())
+        ]
+    return result

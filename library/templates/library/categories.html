@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Categorías de lectura</title>
+</head>
+<body>
+  <h1>Categorías de lectura</h1>
+  <p><a href="{% url 'books' %}">Ver todo el inventario</a></p>
+
+  {% if error %}
+    <p>{{ error }}</p>
+  {% elif not categories %}
+    <p>Por ahora no hay categorías disponibles.</p>
+  {% else %}
+    <ul>
+      {% for category in categories %}
+        <li>
+          <a href="{% url 'books' %}?categoria={{ category.name|urlencode }}">
+            {{ category.name }}
+          </a> ({{ category.count }})
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</body>
+</html>
