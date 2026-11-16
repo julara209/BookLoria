@@ -1,4 +1,5 @@
 import csv
+import unicodedata
 from pathlib import Path
 
 from django.conf import settings
@@ -7,25 +8,16 @@ DATA_FILE = Path(settings.BASE_DIR) / "data" / "biblioteca_montenegro.csv"
 NO_AUTHOR = "Autor no registrado"
 
 GENRE_ALIASES = {
-    "-": "SIN CLASIFICAR",
     "CUENTOS": "CUENTO",
     "NOEVELA DE ADULTOS": "NOVELA DE ADULTOS",
     "NOVEL DE ADULTOS": "NOVELA DE ADULTOS",
     "NOVELA DE AADULTOS": "NOVELA DE ADULTOS",
     "NOVELA DE ADULTO": "NOVELA DE ADULTOS",
-    "NOVELA DE ADUÑTOS": "NOVELA DE ADULTOS",
+    "NOVELA DE ADUNTOS": "NOVELA DE ADULTOS",
     "NOVELAS DE ADULTOS": "NOVELA DE ADULTOS",
     "NOVLA DE ADULTOS": "NOVELA DE ADULTOS",
 }
 
-
-def _normalize_genre(value):
-    value = " ".join((value or "").upper().split())
-
-    if not value or value == "-":
-        return "SIN CLASIFICAR"
-
-    return GENRE_ALIASES.get(value, value)
 
 class DataFileError(Exception):
     """Raised when the library data file cannot be read."""
@@ -36,6 +28,20 @@ def _clean_author(value):
     if value in ("", "-"):
         return NO_AUTHOR
     return value
+
+
+def _strip_accents(text):
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text)
+        if unicodedata.category(c) != "Mn"
+    )
+
+
+def _normalize_genre(value):
+    value = " ".join(_strip_accents((value or "").upper()).split())
+    if not value or value == "-":
+        return "SIN CLASIFICAR"
+    return GENRE_ALIASES.get(value, value)
 
 
 def _to_int(value):
