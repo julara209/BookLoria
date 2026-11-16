@@ -4,7 +4,7 @@ Aplicación web hecha con **Python y Django** para explorar la colección de la 
 
 > **Estado:** en desarrollo. Este README se actualiza a medida que se completan los issues.
 
-## Problema y hospotesis
+## Problema e hipótesis
 
 Familias, docentes y mediadores de lectura podrían tener dificultad para saber qué lecturas hay en la biblioteca según el tipo de público y el género.
 
@@ -35,31 +35,39 @@ Campos usados: `NOMBRE DEL LIBRO`, `AUTOR`, `GENERO`, `NUMERO` (ejemplares).
 
 - Es un inventario del **20 de noviembre de 2022**. No indica si un libro está disponible hoy.
 - El campo `GENERO` tiene 68 valores con errores y variantes; el equipo los normaliza y los agrupa en categorías. **Las categorías son una decisión del equipo, no un dato oficial.**
-- No hay edad recomendada. "Infantil" se toma solo de los registros cuyo género lo dice explícitamente.
+- No hay edad recomendada. "Infantil" se toma solo de los registros cuyo género lo dice explícitamente (271 registros).
+- Los registros `ALBUM` (502) no indican si son infantiles, por lo que **no se clasifican como infantiles**.
 - Hay registros sin autor o sin género (`-`) y títulos repetidos, que pueden ser otras copias o ediciones.
+- Algunos valores de `GENERO` no son géneros sino nombres de editoriales, instituciones o personas (por ejemplo, `MERCK SHARP` o `RUFFUS`). Se dejan en "Sin clasificar".
 
 ## Categorías de lectura
 
-BookLoria agrupa los géneros normalizados del inventario en categorías de lectura para facilitar la búsqueda y exploración de los libros.
+BookLoria agrupa los géneros normalizados del inventario en categorías de lectura para facilitar la exploración.
 
-La clasificación se realiza mediante una tabla de correspondencia definida en `library/services.py`, que relaciona cada género con una única categoría.
+La clasificación se hace con una tabla de correspondencia definida en `library/services.py` (`GENRE_CATEGORIES`), que relaciona cada género con **una única categoría**.
 
-| Categoría | Criterio de agrupación |
-|---|---|
-| Literatura | Novelas, cuentos, poesía, antologías, ensayos, mitos y leyendas para adultos y literatura universal. |
-| Infantil y juvenil | Libros y materiales identificados explícitamente como infantiles o juveniles. |
-| Arte y cultura | Teatro, dramaturgia, arte, recreación, deporte y manualidades. |
-| Ciencias y tecnología | Tecnología, informática, ciencias naturales, matemáticas y medicina. |
-| Ciencias sociales e historia | Geografía, historia y ciencias sociales. |
-| Educación y consulta | Cartillas, magisterio y materiales educativos o de consulta. |
-| Idiomas | Materiales relacionados con el aprendizaje de idiomas, como inglés. |
-| Sin clasificar | Géneros vacíos, desconocidos o que no tienen una correspondencia definida. |
+| Categoría | Libros | Criterio de agrupación |
+|---|---|---|
+| Literatura | 1.835 | Novelas, cuentos, poesía, antologías, ensayos, mitos y leyendas para adultos, tradición oral, literatura universal y escritores montenegrinos. |
+| Ciencias sociales e historia | 612 | Geografía, historia y ciencias sociales (incluye variantes mal escritas del mismo género). |
+| Ciencias y tecnología | 508 | Tecnología, ciencias aplicadas, ciencias naturales y matemáticas. |
+| Álbumes | 502 | Género `ALBUM`. Se mantiene aparte porque el dato no indica si es infantil. |
+| Infantil | 271 | Registros cuyo género dice explícitamente "infantil": novela, poesía, teatro, mitos y leyendas infantiles y enciclopedia infantil. |
+| Arte y cultura | 246 | Teatro, dramaturgia, arte, recreación, deporte y manualidades. |
+| Braille | 40 | Colección en Braille (género `BRAILLE`). |
+| Educación y consulta | 11 | Cartillas, magisterio, valores y material didáctico. |
+| Idiomas | 1 | Material de aprendizaje de idiomas (inglés). |
+| Sin clasificar | 136 | Género vacío (`-`, 129 registros) o valores que no son géneros ni tienen una correspondencia definida. |
+
+> Los conteos corresponden al inventario de 2022 y deben coincidir con los resultados de `python manage.py test`.
 
 ### Criterios de clasificación
 
 - Cada libro recibe exactamente una categoría.
-- Se utiliza el género previamente normalizado para realizar la clasificación.
-- Los géneros que no aparecen en la tabla de correspondencias se asignan a "Sin clasificar".
+- Se usa el género previamente normalizado (mayúsculas, tildes, espacios y errores de escritura).
+- Los géneros que no están en la tabla se asignan a "Sin clasificar".
+- La categoría **Infantil** coincide con el filtro "solo infantiles": ambas contienen los mismos 271 registros. La poesía infantil, por ejemplo, aparece en Infantil y no en Literatura.
+- El campo `genre` original (normalizado) se conserva junto a `category`.
 - Las categorías son una agrupación definida por el equipo y no una clasificación oficial de la biblioteca.
 
 ## Requisitos
