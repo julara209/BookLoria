@@ -34,14 +34,15 @@ def home(request):
 
 
 def book_list(request):
-    """Issue #6: choose a reading category and see its books."""
+    """Issues #6 and #7: choose a reading category and optionally only children's books."""
     category = request.GET.get("categoria", "").strip()
+    only_children = request.GET.get("infantil") == "1"
     try:
         all_books = _inventory()
     except DataFileError as error:
         return render(request, "library/books.html", {"error": str(error)}, status=500)
 
-    results = filter_books(all_books, category)
+    results = filter_books(all_books, category, only_children)
     page = Paginator(results, BOOKS_PER_PAGE).get_page(request.GET.get("page"))
 
     params = request.GET.copy()
@@ -50,6 +51,7 @@ def book_list(request):
     context = {
         "categories": get_categories(all_books),
         "selected": category,
+        "only_children": only_children,
         "showing_unclassified": category.casefold() == UNCLASSIFIED.casefold(),
         "unclassified_count": count_unclassified(all_books),
         "unclassified_name": UNCLASSIFIED,

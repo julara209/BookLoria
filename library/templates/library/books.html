@@ -32,10 +32,21 @@
                 <option value="{{ unclassified_name }}" selected>{{ unclassified_name }}</option>
             {% endif %}
         </select>
+
+        <label class="checkbox">
+            <input type="checkbox" name="infantil" value="1"{% if only_children %} checked{% endif %}>
+            Solo infantiles
+        </label>
+
         <button type="submit">Ver libros</button>
     </form>
 
-    {% if not showing_unclassified and unclassified_count %}
+    <p class="notice">
+        Nota: el inventario solo marca como «infantil» algunos géneros y no incluye
+        la edad recomendada. Revisa cada título antes de elegirlo.
+    </p>
+
+    {% if not showing_unclassified and not only_children and unclassified_count %}
         <p class="notice">
             Aviso: hay {{ unclassified_count }} libros «{{ unclassified_name }}» que no se muestran por defecto.
             <a href="?categoria={{ unclassified_name|urlencode }}">Verlos</a>
@@ -48,7 +59,16 @@
     {% endif %}
 
     {% if total == 0 %}
-        <p class="empty">No hay libros que coincidan con esa categoría.</p>
+        <p class="empty">
+            {% if only_children and selected %}
+                No hay libros infantiles en la categoría «{{ selected }}».
+                Prueba con otra categoría o desactiva «Solo infantiles».
+            {% elif only_children %}
+                No hay libros marcados como infantiles.
+            {% else %}
+                No hay libros que coincidan con esa categoría.
+            {% endif %}
+        </p>
     {% else %}
         <p class="count">{{ total }} libro{{ total|pluralize }}</p>
         <div class="table-wrap">

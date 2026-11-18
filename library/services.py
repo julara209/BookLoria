@@ -42,14 +42,13 @@ GENRE_CATEGORIES = {
     "TRADICION ORAL": "Literatura",
     "TRADICIONES MITICO LITERARIAS": "Literatura",
 
-    # Infantil y juvenil
-    "ENCICLOPEDIA INFANTIL": "Infantil y juvenil",
-    "INFANTIL": "Infantil y juvenil",
-    "JUGANDO SE APRENDE": "Infantil y juvenil",
-    "MITOS Y LEYENDAS /INFANTIL": "Infantil y juvenil",
-    "NOVELA INFANTIL": "Infantil y juvenil",
-    "POESIA /INFANTIL": "Infantil y juvenil",
-    "TEATRO / INFANTIL": "Infantil y juvenil",
+    # Infantil (solo géneros que contienen "infantil")
+    "ENCICLOPEDIA INFANTIL": "Infantil",
+    "INFANTIL": "Infantil",
+    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
+    "NOVELA INFANTIL": "Infantil",
+    "POESIA /INFANTIL": "Infantil",
+    "TEATRO / INFANTIL": "Infantil",
 
     # Álbumes
     "ALBUM": "Álbumes",
@@ -86,14 +85,6 @@ GENRE_CATEGORIES = {
     "CARTILLA": "Educación y consulta",
     "MAGISTERIO": "Educación y consulta",
     "VALORES": "Educación y consulta",
-
-    # Infantil
-    "ENCICLOPEDIA INFANTIL": "Infantil",
-    "INFANTIL": "Infantil",
-    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
-    "NOVELA INFANTIL": "Infantil",
-    "POESIA /INFANTIL": "Infantil",
-    "TEATRO / INFANTIL": "Infantil",
 
     # Idiomas
     "INGLES": "Idiomas",
@@ -133,7 +124,7 @@ def _categorize_genre(value):
 def _to_int(value):
     try:
         return int(float(str(value).strip()))
-    except ValueError:
+    except (ValueError, TypeError):
         return 0
 
 
@@ -159,17 +150,33 @@ def load_books(path=DATA_FILE):
         )
 
 
-def filter_books(books, category=""):
-    """Filter books by reading category.
+def is_children_book(book):
+    """True if the genre explicitly contains 'infantil'.
+
+    The genre is already normalized (uppercase, no accents), so a plain
+    substring check is enough. An ALBUM is NOT assumed to be a children's book.
+    """
+    return "INFANTIL" in book["genre"]
+
+
+def filter_books(books, category="", only_children=False):
+    """Filter books by reading category and, optionally, children's genres.
 
     'Sin clasificar' is hidden unless it is requested explicitly.
     """
     category = (category or "").strip()
+
     if category.casefold() == UNCLASSIFIED.casefold():
-        return [b for b in books if b["category"] == UNCLASSIFIED]
-    if category:
-        return [b for b in books if b["category"] == category]
-    return [b for b in books if b["category"] != UNCLASSIFIED]
+        results = [b for b in books if b["category"] == UNCLASSIFIED]
+    elif category:
+        results = [b for b in books if b["category"] == category]
+    else:
+        results = [b for b in books if b["category"] != UNCLASSIFIED]
+
+    if only_children:
+        results = [b for b in results if is_children_book(b)]
+
+    return results
 
 
 def get_categories(books):
