@@ -42,14 +42,13 @@ GENRE_CATEGORIES = {
     "TRADICION ORAL": "Literatura",
     "TRADICIONES MITICO LITERARIAS": "Literatura",
 
-    # Infantil y juvenil
-    "ENCICLOPEDIA INFANTIL": "Infantil y juvenil",
-    "INFANTIL": "Infantil y juvenil",
-    "JUGANDO SE APRENDE": "Infantil y juvenil",
-    "MITOS Y LEYENDAS /INFANTIL": "Infantil y juvenil",
-    "NOVELA INFANTIL": "Infantil y juvenil",
-    "POESIA /INFANTIL": "Infantil y juvenil",
-    "TEATRO / INFANTIL": "Infantil y juvenil",
+    # Infantil (solo géneros que contienen "infantil")
+    "ENCICLOPEDIA INFANTIL": "Infantil",
+    "INFANTIL": "Infantil",
+    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
+    "NOVELA INFANTIL": "Infantil",
+    "POESIA /INFANTIL": "Infantil",
+    "TEATRO / INFANTIL": "Infantil",
 
     # Álbumes
     "ALBUM": "Álbumes",
