@@ -1,0 +1,28 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}BookLoria{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'library/styles.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a class="brand" href="{% url 'home' %}">📚 BookLoria</a>
+            <span class="tagline">Biblioteca Pública de Montenegro, Quindío</span>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            Datos abiertos de la Alcaldía de Montenegro, Quindío, publicados en
+            <a href="https://www.datos.gov.co/">datos.gov.co</a>.
+        </div>
+    </footer>
+</body>
+</html>
