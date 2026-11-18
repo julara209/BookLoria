@@ -42,13 +42,14 @@ GENRE_CATEGORIES = {
     "TRADICION ORAL": "Literatura",
     "TRADICIONES MITICO LITERARIAS": "Literatura",
 
-    # Infantil
-    "ENCICLOPEDIA INFANTIL": "Infantil",
-    "INFANTIL": "Infantil",
-    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
-    "NOVELA INFANTIL": "Infantil",
-    "POESIA /INFANTIL": "Infantil",
-    "TEATRO / INFANTIL": "Infantil",
+    # Infantil y juvenil
+    "ENCICLOPEDIA INFANTIL": "Infantil y juvenil",
+    "INFANTIL": "Infantil y juvenil",
+    "JUGANDO SE APRENDE": "Infantil y juvenil",
+    "MITOS Y LEYENDAS /INFANTIL": "Infantil y juvenil",
+    "NOVELA INFANTIL": "Infantil y juvenil",
+    "POESIA /INFANTIL": "Infantil y juvenil",
+    "TEATRO / INFANTIL": "Infantil y juvenil",
 
     # Álbumes
     "ALBUM": "Álbumes",
@@ -69,6 +70,7 @@ GENRE_CATEGORIES = {
     # Ciencias y tecnología
     "600 TECNOLOGIA (CIENCIAS APLICADAS)": "Ciencias y tecnología",
     "CIENCIAS NUTURALES Y MATEMATICAS": "Ciencias y tecnología",
+    "FACULTAD DE MEDICINA": "Ciencias y tecnología",
 
     # Ciencias sociales e historia
     "900 GEOGRAFIA E HISTORIA": "Ciencias sociales e historia",
@@ -82,9 +84,16 @@ GENRE_CATEGORIES = {
 
     # Educación y consulta
     "CARTILLA": "Educación y consulta",
-    "JUGANDO SE APRENDE": "Educación y consulta",
     "MAGISTERIO": "Educación y consulta",
     "VALORES": "Educación y consulta",
+
+    # Infantil
+    "ENCICLOPEDIA INFANTIL": "Infantil",
+    "INFANTIL": "Infantil",
+    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
+    "NOVELA INFANTIL": "Infantil",
+    "POESIA /INFANTIL": "Infantil",
+    "TEATRO / INFANTIL": "Infantil",
 
     # Idiomas
     "INGLES": "Idiomas",
