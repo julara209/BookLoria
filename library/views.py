@@ -20,25 +20,28 @@ def _inventory():
 
 
 def home(request):
-    """HU_001: first books of the inventory, with the data source."""
+    """Issue #3: first books of the inventory, with the data source."""
     try:
         books = _inventory()
     except DataFileError as error:
         return render(request, "library/index.html", {"error": str(error)}, status=500)
-    context = {"books": books[:HOME_BOOKS], "total": len(books), "shown": min(HOME_BOOKS, len(books))}
+    context = {
+        "books": books[:HOME_BOOKS],
+        "total": len(books),
+        "shown": min(HOME_BOOKS, len(books)),
+    }
     return render(request, "library/index.html", context)
 
 
 def book_list(request):
-    """HU_002: choose a reading category (and optionally only children's books)."""
+    """Issue #6: choose a reading category and see its books."""
     category = request.GET.get("categoria", "").strip()
-    only_children = request.GET.get("infantil") == "1"
     try:
         all_books = _inventory()
     except DataFileError as error:
         return render(request, "library/books.html", {"error": str(error)}, status=500)
 
-    results = filter_books(all_books, category, only_children)
+    results = filter_books(all_books, category)
     page = Paginator(results, BOOKS_PER_PAGE).get_page(request.GET.get("page"))
 
     params = request.GET.copy()
@@ -47,7 +50,6 @@ def book_list(request):
     context = {
         "categories": get_categories(all_books),
         "selected": category,
-        "only_children": only_children,
         "showing_unclassified": category.casefold() == UNCLASSIFIED.casefold(),
         "unclassified_count": count_unclassified(all_books),
         "unclassified_name": UNCLASSIFIED,

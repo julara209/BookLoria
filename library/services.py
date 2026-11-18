@@ -1,12 +1,13 @@
-
 import csv
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 from django.conf import settings
 
 DATA_FILE = Path(settings.BASE_DIR) / "data" / "biblioteca_montenegro.csv"
 NO_AUTHOR = "Autor no registrado"
+UNCLASSIFIED = "Sin clasificar"
 
 GENRE_ALIASES = {
     "CUENTOS": "CUENTO",
@@ -50,6 +51,12 @@ GENRE_CATEGORIES = {
     "POESIA /INFANTIL": "Infantil y juvenil",
     "TEATRO / INFANTIL": "Infantil y juvenil",
 
+    # Álbumes
+    "ALBUM": "Álbumes",
+
+    # Accesibilidad
+    "BRAILLE": "Braille",
+
     # Arte y cultura
     "700 ARTE RECREACION Y DEPORTE": "Arte y cultura",
     "ARTE RECREACION Y DEPORTE": "Arte y cultura",
@@ -79,6 +86,14 @@ GENRE_CATEGORIES = {
     "CARTILLA": "Educación y consulta",
     "MAGISTERIO": "Educación y consulta",
     "VALORES": "Educación y consulta",
+
+    # Infantil
+    "ENCICLOPEDIA INFANTIL": "Infantil",
+    "INFANTIL": "Infantil",
+    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
+    "NOVELA INFANTIL": "Infantil",
+    "POESIA /INFANTIL": "Infantil",
+    "TEATRO / INFANTIL": "Infantil",
 
     # Idiomas
     "INGLES": "Idiomas",
@@ -112,7 +127,7 @@ def _normalize_genre(value):
 
 def _categorize_genre(value):
     genre = _normalize_genre(value)
-    return GENRE_CATEGORIES.get(genre, "Sin clasificar")
+    return GENRE_CATEGORIES.get(genre, UNCLASSIFIED)
 
 
 def _to_int(value):
@@ -142,3 +157,31 @@ def load_books(path=DATA_FILE):
             "No se encontró el archivo de datos. "
             "Verifique que exista data/biblioteca_montenegro.csv"
         )
+
+
+def filter_books(books, category=""):
+    """Filter books by reading category.
+
+    'Sin clasificar' is hidden unless it is requested explicitly.
+    """
+    category = (category or "").strip()
+    if category.casefold() == UNCLASSIFIED.casefold():
+        return [b for b in books if b["category"] == UNCLASSIFIED]
+    if category:
+        return [b for b in books if b["category"] == category]
+    return [b for b in books if b["category"] != UNCLASSIFIED]
+
+
+def get_categories(books):
+    """Return reading categories with their book count (without 'Sin clasificar')."""
+    counts = Counter(b["category"] for b in books if b["category"] != UNCLASSIFIED)
+    return [
+        {"name": name, "count": count}
+        for name, count in sorted(
+            counts.items(), key=lambda item: _strip_accents(item[0]).casefold()
+        )
+    ]
+
+
+def count_unclassified(books):
+    return sum(1 for b in books if b["category"] == UNCLASSIFIED)

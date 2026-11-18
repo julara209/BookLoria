@@ -1,0 +1,70 @@
+{% extends "library/base.html" %}
+
+{% block title %}Libros por categoría · BookLoria{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Libros por categoría de lectura</h1>
+    <p class="lead">
+        Elige una categoría para ver los libros que la biblioteca tiene sobre ese tema.
+    </p>
+</section>
+
+<section class="source-note">
+    {% include "library/_source.html" %}
+</section>
+
+{% if error %}
+    <div class="alert" role="alert">
+        <strong>No se pudieron cargar los libros.</strong> {{ error }}
+    </div>
+{% else %}
+    <form method="get" class="filters">
+        <label for="categoria">Categoría</label>
+        <select name="categoria" id="categoria">
+            <option value="">Todas las categorías</option>
+            {% for category in categories %}
+                <option value="{{ category.name }}"{% if category.name == selected %} selected{% endif %}>
+                    {{ category.name }} ({{ category.count }})
+                </option>
+            {% endfor %}
+            {% if showing_unclassified %}
+                <option value="{{ unclassified_name }}" selected>{{ unclassified_name }}</option>
+            {% endif %}
+        </select>
+        <button type="submit">Ver libros</button>
+    </form>
+
+    {% if not showing_unclassified and unclassified_count %}
+        <p class="notice">
+            Aviso: hay {{ unclassified_count }} libros «{{ unclassified_name }}» que no se muestran por defecto.
+            <a href="?categoria={{ unclassified_name|urlencode }}">Verlos</a>
+        </p>
+    {% endif %}
+    {% if showing_unclassified %}
+        <p class="notice">
+            Estás viendo los libros «{{ unclassified_name }}»: no tienen categoría de lectura asignada.
+        </p>
+    {% endif %}
+
+    {% if total == 0 %}
+        <p class="empty">No hay libros que coincidan con esa categoría.</p>
+    {% else %}
+        <p class="count">{{ total }} libro{{ total|pluralize }}</p>
+        <div class="table-wrap">
+            {% include "library/_books_table.html" with books=page %}
+        </div>
+        {% if page.has_other_pages %}
+            <nav class="pagination" aria-label="Paginación">
+                {% if page.has_previous %}
+                    <a href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.previous_page_number }}">← Anterior</a>
+                {% endif %}
+                <span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
+                {% if page.has_next %}
+                    <a href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.next_page_number }}">Siguiente →</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% endif %}
+{% endif %}
+{% endblock %}
