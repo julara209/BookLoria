@@ -1,13 +1,18 @@
+from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
 from library.services import (
+    GENRE_CATEGORIES,
     NO_AUTHOR,
+    DataFileError,
+    _categorize_genre,
     _clean_author,
     _normalize_genre,
-    _categorize_genre,
     load_books,
 )
+
+VALID_CATEGORIES = set(GENRE_CATEGORIES.values()) | {"Sin clasificar"}
 
 
 class LoadBooksTests(SimpleTestCase):
@@ -37,14 +42,14 @@ class NormalizeGenreTests(SimpleTestCase):
         variants = [
             "NOEVELA DE ADULTOS", "NOVEL DE ADULTOS",
             "NOVELA DE AADULTOS", "NOVELA DE ADULTO",
-            "NOVELA DE ADUNTOS", "NOVELAS DE ADULTOS",
+            "NOVELA DE ADUÑTOS", "NOVELAS DE ADULTOS",
             "NOVLA DE ADULTOS",
         ]
         for variant in variants:
             with self.subTest(variant=variant):
                 self.assertEqual(
                     _normalize_genre(variant),
-                    "NOVELA DE ADULTOS"
+                    "NOVELA DE ADULTOS",
                 )
 
     def test_empty_genre_becomes_unclassified(self):
@@ -60,30 +65,73 @@ class NormalizeGenreTests(SimpleTestCase):
 class GenreCategoriesTests(SimpleTestCase):
 
     def test_literature_genres_receive_correct_category(self):
-        self.assertEqual(
-            _categorize_genre("NOVELA DE ADULTOS"),
-            "Literatura"
-        )
+        self.assertEqual(_categorize_genre("NOVELA DE ADULTOS"), "Literatura")
 
     def test_infantil_genres_receive_correct_category(self):
-        self.assertEqual(
-            _categorize_genre("NOVELA INFANTIL"),
-            "Infantil y juvenil"
-        )
+        self.assertEqual(_categorize_genre("NOVELA INFANTIL"), "Infantil")
+        self.assertEqual(_categorize_genre("POESIA /INFANTIL"), "Infantil")
 
     def test_art_genres_receive_correct_category(self):
-        self.assertEqual(
-            _categorize_genre("TEATRO"),
-            "Arte y cultura"
-        )
+        self.assertEqual(_categorize_genre("TEATRO"), "Arte y cultura")
+
+    def test_accented_genre_is_categorized(self):
+        self.assertEqual(_categorize_genre("POESÍA"), "Literatura")
+
+    def test_album_and_braille_have_their_own_category(self):
+        self.assertEqual(_categorize_genre("ALBUM"), "Álbumes")
+        self.assertEqual(_categorize_genre("BRAILLE"), "Braille")
 
     def test_unknown_genre_is_unclassified(self):
         self.assertEqual(
             _categorize_genre("GENERO DESCONOCIDO"),
-            "Sin clasificar"
+            "Sin clasificar",
         )
 
-    def test_every_book_has_exactly_one_category(self):
+    def test_every_book_has_a_valid_category(self):
         for book in load_books():
-            self.assertIn("category", book)
-            self.assertTrue(book["category"])
+            self.assertIn(book["category"], VALID_CATEGORIES)
+
+    def test_infantil_category_matches_infantil_genre(self):
+        books = load_books()
+        by_category = [b for b in books if b["category"] == "Infantil"]
+        by_genre = [b for b in books if "INFANTIL" in b["genre"]]
+        self.assertEqual(len(by_category), len(by_genre))
+        self.assertEqual(len(by_category), 271)
+
+
+class HomeViewTests(SimpleTestCase):
+
+    def test_home_loads_and_lists_50_books(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["books"]), 50)
+        self.assertEqual(response.context["total"], 4162)
+
+    def test_home_shows_title_author_and_copies_headers(self):
+        response = self.client.get("/")
+        for header in ("Título", "Autor", "Ejemplares"):
+            self.assertContains(response, header)
+
+    def test_home_cites_the_data_source(self):
+        html = self.client.get("/").content.decode()
+        self.assertIn("hecw-3dai", html)
+        self.assertIn("datos.gov.co", html)
+        self.assertIn("no indica si un libro está disponible hoy", html)
+
+    def test_home_shows_placeholder_for_book_without_author(self):
+        books = [{
+            "title": "Libro de prueba",
+            "author": NO_AUTHOR,
+            "genre": "CUENTO",
+            "category": "Literatura",
+            "copies": 1,
+        }]
+        with patch("library.views.load_books", return_value=books):
+            response = self.client.get("/")
+        self.assertContains(response, "Autor no registrado")
+
+    def test_home_does_not_break_if_data_file_is_missing(self):
+        error = DataFileError("falta el archivo")
+        with patch("library.views.load_books", side_effect=error):
+            response = self.client.get("/")
+        self.assertContains(response, "falta el archivo", status_code=500)

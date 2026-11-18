@@ -1,11 +1,26 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Brújula Lectora Montenegro</title>
-</head>
-<body>
-    <h1>Brújula Lectora Montenegro</h1>
-    <p>Proyecto en construcción.</p>
-</body>
-</html>
+{% extends "library/base.html" %}
+
+{% block content %}
+<section class="hero">
+    <h1>Descubre qué hay en la biblioteca</h1>
+    <p class="lead">
+        Explora los libros del inventario de la Biblioteca Pública de Montenegro,
+        construido con datos abiertos reales.
+    </p>
+</section>
+
+<section class="source-note">
+    {% include "library/_source.html" %}
+</section>
+
+{% if error %}
+    <div class="alert" role="alert">
+        <strong>No se pudieron cargar los libros.</strong> {{ error }}
+    </div>
+{% else %}
+    <p class="count">Mostrando {{ shown }} de {{ total }} registros.</p>
+    <div class="table-wrap">
+        {% include "library/_books_table.html" %}
+    </div>
+{% endif %}
+{% endblock %}
