@@ -5,8 +5,9 @@ from pathlib import Path
 
 from django.conf import settings
 
-DATA_FILE = Path(settings.BASE_DIR) / "data" / "Biblioteca_Montenegro.csv"
+DATA_FILE = Path(settings.BASE_DIR) / "data" / "biblioteca_montenegro.csv"
 NO_AUTHOR = "Autor no registrado"
+UNCLASSIFIED = "Sin clasificar"
 
 GENRE_ALIASES = {
     "CUENTOS": "CUENTO",
@@ -17,6 +18,76 @@ GENRE_ALIASES = {
     "NOVELA DE ADUNTOS": "NOVELA DE ADULTOS",
     "NOVELAS DE ADULTOS": "NOVELA DE ADULTOS",
     "NOVLA DE ADULTOS": "NOVELA DE ADULTOS",
+}
+
+GENRE_CATEGORIES = {
+    # Literatura
+    "ANTOLOGIA": "Literatura",
+    "ANTOLOGIA DE LAS LITERARTURAS": "Literatura",
+    "CLASICOS UNIVERSALES": "Literatura",
+    "CONFERENCIAS SOBRE LA LITERATURA": "Literatura",
+    "CUENTO": "Literatura",
+    "CUENTO COLOMBIANO": "Literatura",
+    "CUENTO EXAEQUO": "Literatura",
+    "CUENTO Y POESIA": "Literatura",
+    "ENSAYO": "Literatura",
+    "ESCRITORES MONTENEGRINOS": "Literatura",
+    "LITERATURA": "Literatura",
+    "LITERATURA ORAL INDIGENA": "Literatura",
+    "LITERATURA UNIVERSAL": "Literatura",
+    "MITOS Y LEYENDAS /ADULTOS": "Literatura",
+    "NOVELA": "Literatura",
+    "NOVELA DE ADULTOS": "Literatura",
+    "POESIA": "Literatura",
+    "TRADICION ORAL": "Literatura",
+    "TRADICIONES MITICO LITERARIAS": "Literatura",
+
+    # Infantil
+    "ENCICLOPEDIA INFANTIL": "Infantil",
+    "INFANTIL": "Infantil",
+    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
+    "NOVELA INFANTIL": "Infantil",
+    "POESIA /INFANTIL": "Infantil",
+    "TEATRO / INFANTIL": "Infantil",
+
+    # Álbumes
+    "ALBUM": "Álbumes",
+
+    # Accesibilidad
+    "BRAILLE": "Braille",
+
+    # Arte y cultura
+    "700 ARTE RECREACION Y DEPORTE": "Arte y cultura",
+    "ARTE RECREACION Y DEPORTE": "Arte y cultura",
+    "DRAMARTURGIA": "Arte y cultura",
+    "MANUALIDADES": "Arte y cultura",
+    "ORIGAMI, PLASTILINA, FOMY GLOBOS": "Arte y cultura",
+    "RED NACIONAL DRAMATURGIA": "Arte y cultura",
+    "SOBRE ARTE": "Arte y cultura",
+    "TEATRO": "Arte y cultura",
+
+    # Ciencias y tecnología
+    "600 TECNOLOGIA (CIENCIAS APLICADAS)": "Ciencias y tecnología",
+    "CIENCIAS NUTURALES Y MATEMATICAS": "Ciencias y tecnología",
+
+    # Ciencias sociales e historia
+    "900 GEOGRAFIA E HISTORIA": "Ciencias sociales e historia",
+    "900GEOGRAFIA E HISTORIA": "Ciencias sociales e historia",
+    "990 GEOGRAFIA E HISTORIA": "Ciencias sociales e historia",
+    "CIENCIA SOCIALES": "Ciencias sociales e historia",
+    "CIENCIAS SOCIALES": "Ciencias sociales e historia",
+    "CIENCIENCIAS SOCIALES": "Ciencias sociales e historia",
+    "CIENIAS SOCIALES": "Ciencias sociales e historia",
+    "SOCIALES": "Ciencias sociales e historia",
+
+    # Educación y consulta
+    "CARTILLA": "Educación y consulta",
+    "JUGANDO SE APRENDE": "Educación y consulta",
+    "MAGISTERIO": "Educación y consulta",
+    "VALORES": "Educación y consulta",
+
+    # Idiomas
+    "INGLES": "Idiomas",
 }
 
 
@@ -45,6 +116,11 @@ def _normalize_genre(value):
     return GENRE_ALIASES.get(value, value)
 
 
+def _categorize_genre(value):
+    genre = _normalize_genre(value)
+    return GENRE_CATEGORIES.get(genre, UNCLASSIFIED)
+
+
 def _to_int(value):
     try:
         return int(float(str(value).strip()))
@@ -62,6 +138,7 @@ def load_books(path=DATA_FILE):
                     "title": (row.get("NOMBRE DEL LIBRO") or "").strip(),
                     "author": _clean_author(row.get("AUTOR")),
                     "genre": _normalize_genre(row.get("GENERO")),
+                    "category": _categorize_genre(row.get("GENERO")),
                     "copies": _to_int(row.get("NUMERO")),
                 }
                 for row in reader
@@ -69,27 +146,33 @@ def load_books(path=DATA_FILE):
     except FileNotFoundError:
         raise DataFileError(
             "No se encontró el archivo de datos. "
-            "Verifique que exista data/Biblioteca_Montenegro.csv"
+            "Verifique que exista data/biblioteca_montenegro.csv"
         )
 
 
+def filter_books(books, category=""):
+    """Filter books by reading category.
+
+    'Sin clasificar' is hidden unless it is requested explicitly.
+    """
+    category = (category or "").strip()
+    if category.casefold() == UNCLASSIFIED.casefold():
+        return [b for b in books if b["category"] == UNCLASSIFIED]
+    if category:
+        return [b for b in books if b["category"] == category]
+    return [b for b in books if b["category"] != UNCLASSIFIED]
+
+
 def get_categories(books):
-    """Return [{'name': ..., 'count': ...}] sorted by name."""
-    counts = Counter(book["genre"] for book in books)
-    return [{"name": name, "count": count} for name, count in sorted(counts.items())]
+    """Return reading categories with their book count (without 'Sin clasificar')."""
+    counts = Counter(b["category"] for b in books if b["category"] != UNCLASSIFIED)
+    return [
+        {"name": name, "count": count}
+        for name, count in sorted(
+            counts.items(), key=lambda item: _strip_accents(item[0]).casefold()
+        )
+    ]
 
 
-def search_books(books, genre="", query=""):
-    """Filter books by category and/or by title or author (ignores accents and case)."""
-    result = books
-    if genre.strip():
-        genre = _normalize_genre(genre)
-        result = [b for b in result if b["genre"] == genre]
-    query = _strip_accents(query.strip().lower())
-    if query:
-        result = [
-            b for b in result
-            if query in _strip_accents(b["title"].lower())
-            or query in _strip_accents(b["author"].lower())
-        ]
-    return result
+def count_unclassified(books):
+    return sum(1 for b in books if b["category"] == UNCLASSIFIED)
