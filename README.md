@@ -14,9 +14,9 @@ Familias, docentes y mediadores de lectura podrían tener dificultad para saber 
 
 ## Funcionalidad
 
-- [ ] Ver una lista de libros reales del inventario
-- [ ] Explorar libros por categoría de lectura
-- [ ] Filtrar solo libros marcados como infantiles
+- [x] Ver una lista de libros reales del inventario (página de inicio, primeros 50)
+- [x] Explorar libros por categoría de lectura (`/libros/`)
+- [x] Filtrar solo libros marcados como infantiles (casilla «Solo infantiles»)
 
 ## Fuente de los datos
 
@@ -26,7 +26,7 @@ Familias, docentes y mediadores de lectura podrían tener dificultad para saber 
 | ID en datos.gov.co | `hecw-3dai` |
 | URL | https://www.datos.gov.co/Cultura/Activos-de-Informaci-n-Biblioteca-P-blica-Monteneg/hecw-3dai/about_data |
 | Entidad publicadora | Alcaldía de Montenegro, Quindío |
-| Archivo usado | `data/biblioteca_montenegro.csv` (4.162 registros, descargado el 13-11-2026) |
+| Archivo usado | `data/Biblioteca_Montenegro.csv` (4.162 registros, descargado el 13-11-2026) |
 | Modalidad de acceso | Archivo descargado (CSV) |
 
 Campos usados: `NOMBRE DEL LIBRO`, `AUTOR`, `GENERO`, `NUMERO` (ejemplares).
@@ -113,7 +113,15 @@ Abrir en el navegador: http://127.0.0.1:8000/
 python manage.py test
 ```
 
-**Último resultado registrado:** _pendiente — completar con el resultado real (issue #8)._
+**Último resultado registrado** (`python manage.py test`, 16-11-2026):
+
+```
+Found 29 test(s).
+Ran 29 tests in 0.670s
+OK
+```
+
+**Prueba manual en el navegador:** _pendiente — la persona que revise debe abrir `/`, elegir una categoría en `/libros/`, activar «Solo infantiles» y registrar aquí lo que vio._
 
 ## Estructura del proyecto
 
@@ -125,10 +133,10 @@ BookLoria/
 │   └── biblioteca_montenegro.csv
 ├── library/
 │   ├── services.py      # leer, normalizar y agrupar los datos
-│   ├── views.py
+│   ├── views.py         # inicio y listado por categoría
 │   ├── urls.py
 │   ├── tests.py
-│   └── templates/library/index.html
+│   └── templates/library/   # index, books y parciales
 ├── manage.py
 ├── requirements.txt
 └── README.md

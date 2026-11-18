@@ -1,6 +1,6 @@
-
 import csv
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 from django.conf import settings
@@ -42,13 +42,20 @@ GENRE_CATEGORIES = {
     "TRADICION ORAL": "Literatura",
     "TRADICIONES MITICO LITERARIAS": "Literatura",
 
-    # Infantil
-    "ENCICLOPEDIA INFANTIL": "Infantil",
-    "INFANTIL": "Infantil",
-    "MITOS Y LEYENDAS /INFANTIL": "Infantil",
-    "NOVELA INFANTIL": "Infantil",
-    "POESIA /INFANTIL": "Infantil",
-    "TEATRO / INFANTIL": "Infantil",
+    # Infantil y juvenil
+    "ENCICLOPEDIA INFANTIL": "Infantil y juvenil",
+    "INFANTIL": "Infantil y juvenil",
+    "JUGANDO SE APRENDE": "Infantil y juvenil",
+    "MITOS Y LEYENDAS /INFANTIL": "Infantil y juvenil",
+    "NOVELA INFANTIL": "Infantil y juvenil",
+    "POESIA /INFANTIL": "Infantil y juvenil",
+    "TEATRO / INFANTIL": "Infantil y juvenil",
+
+    # Álbumes
+    "ALBUM": "Álbumes",
+
+    # Accesibilidad
+    "BRAILLE": "Braille",
 
     # Arte y cultura
     "700 ARTE RECREACION Y DEPORTE": "Arte y cultura",
@@ -82,10 +89,6 @@ GENRE_CATEGORIES = {
 
     # Idiomas
     "INGLES": "Idiomas",
-
-    # Otras colecciones
-    "ALBUM": "Álbumes",
-    "BRAILLE": "Braille",
 }
 
 
@@ -148,34 +151,45 @@ def load_books(path=DATA_FILE):
         )
 
 
-def get_categories(books):
-    """Return the categories available in the inventory."""
-    categories = {book["category"] for book in books}
-    return sorted(categories, key=str.casefold)
+def is_children_book(book):
+    """True if the genre explicitly contains 'infantil'.
 
-
-def count_unclassified(books):
-    """Count books without an assigned reading category."""
-    return sum(
-        1 for book in books
-        if book["category"].casefold() == UNCLASSIFIED.casefold()
-    )
+    The genre is already normalized (uppercase, no accents), so a plain
+    substring check is enough. An ALBUM is NOT assumed to be a children's book.
+    """
+    return "INFANTIL" in book["genre"]
 
 
 def filter_books(books, category="", only_children=False):
-    """Filter books by category and, optionally, by the children's collection."""
-    results = books
+    """Filter books by reading category and, optionally, children's genres.
 
-    if category:
-        results = [
-            book for book in results
-            if book["category"].casefold() == category.casefold()
-        ]
+    'Sin clasificar' is hidden unless it is requested explicitly.
+    """
+    category = (category or "").strip()
+
+    if category.casefold() == UNCLASSIFIED.casefold():
+        results = [b for b in books if b["category"] == UNCLASSIFIED]
+    elif category:
+        results = [b for b in books if b["category"] == category]
+    else:
+        results = [b for b in books if b["category"] != UNCLASSIFIED]
 
     if only_children:
-        results = [
-            book for book in results
-            if book["category"].casefold() == "infantil"
-        ]
+        results = [b for b in results if is_children_book(b)]
 
     return results
+
+
+def get_categories(books):
+    """Return reading categories with their book count (without 'Sin clasificar')."""
+    counts = Counter(b["category"] for b in books if b["category"] != UNCLASSIFIED)
+    return [
+        {"name": name, "count": count}
+        for name, count in sorted(
+            counts.items(), key=lambda item: _strip_accents(item[0]).casefold()
+        )
+    ]
+
+
+def count_unclassified(books):
+    return sum(1 for b in books if b["category"] == UNCLASSIFIED)
