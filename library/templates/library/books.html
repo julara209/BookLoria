@@ -1,0 +1,81 @@
+
+{% extends "library/base.html" %}
+
+{% block title %}Explorar libros | BookLoria{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Explora nuestra colección</h1>
+    <p class="lead">
+        Encuentra libros por categoría de lectura y consulta los ejemplares del inventario.
+    </p>
+</section>
+
+<p><a href="{% url 'home' %}">Volver al inicio</a></p>
+
+{% if error %}
+    <div class="alert" role="alert">
+        <strong>No se pudieron cargar los libros.</strong> {{ error }}
+    </div>
+{% else %}
+
+    <section class="filters">
+        <form method="get" action="{% url 'books' %}">
+            <label for="categoria">Categoría de lectura:</label>
+            <select name="categoria" id="categoria">
+                <option value="">Todas las categorías</option>
+                {% for category in categories %}
+                    <option value="{{ category }}"
+                        {% if selected == category %}selected{% endif %}>
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label>
+                <input type="checkbox" name="infantil" value="1"
+                    {% if only_children %}checked{% endif %}>
+                Mostrar solo libros infantiles
+            </label>
+
+            <button type="submit">Filtrar libros</button>
+            <a href="{% url 'books' %}">Limpiar filtros</a>
+        </form>
+    </section>
+
+    <p class="count">
+        Se encontraron {{ total }} libros.
+    </p>
+
+    {% if showing_unclassified %}
+        <p>
+            Libros sin clasificar: {{ unclassified_count }}
+        </p>
+    {% endif %}
+
+    <div class="table-wrap">
+        {% include "library/_books_table.html" with books=page.object_list %}
+    </div>
+
+    {% if page.paginator.num_pages > 1 %}
+        <nav aria-label="Paginación de libros">
+            {% if page.has_previous %}
+                <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page.previous_page_number }}">
+                    Anterior
+                </a>
+            {% endif %}
+
+            <span>
+                Página {{ page.number }} de {{ page.paginator.num_pages }}
+            </span>
+
+            {% if page.has_next %}
+                <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page.next_page_number }}">
+                    Siguiente
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+
+{% endif %}
+{% endblock %}

@@ -1,3 +1,4 @@
+
 <table class="books">
   <thead>
     <tr>
@@ -9,12 +10,16 @@
   </thead>
   <tbody>
     {% for book in books %}
-    <tr>
-      <td class="book-title">{{ book.title }}</td>
-      <td>{{ book.author }}</td>
-      <td><span class="badge">{{ book.category }}</span></td>
-      <td class="num">{{ book.copies }}</td>
-    </tr>
+      <tr>
+        <td class="book-title">{{ book.title }}</td>
+        <td>{{ book.author }}</td>
+        <td><span class="badge">{{ book.category }}</span></td>
+        <td class="num">{{ book.copies }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4">No se encontraron libros.</td>
+      </tr>
     {% endfor %}
   </tbody>
 </table>
